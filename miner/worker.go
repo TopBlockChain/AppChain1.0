@@ -423,7 +423,7 @@ func (self *worker) commitNewWork() {
 		//log.Info("此处计算矿工币龄", "Tokentime", Tokentime)
 		header.Tokentime = self.chain.CalcTokenTime(header.Coinbase)
 		if header.Tokentime.Cmp(big.NewInt(0))==0 {
-            log.Info("移动应用矿池合约未部署，尚不能正常挖矿！")              
+            log.Info("移动应用权重为零，尚不能正常挖矿！")              
 		}
 	}
 	if err := self.engine.Prepare(self.chain, header); err != nil {

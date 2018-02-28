@@ -92,10 +92,6 @@
 				"type": "uint256"
 			},
 			{
-				"name": "ActiveNum",
-				"type": "uint256"
-			},
-			{
 				"name": "RegistryUsers",
 				"type": "uint256"
 			}

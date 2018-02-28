@@ -17,7 +17,6 @@ contract MobileMine {
 //Active users' information.
     struct ActiveInfo {
           uint LastTime;     //Last calculate time.
-          uint ActiveNum;  //Active users number.
           uint RegistryUsers; //the number of already registrtyUsers.
         }
   /*Miner and active users defining  */
@@ -28,8 +27,7 @@ contract MobileMine {
 //Constuct function£¬initially define the creator as the manager.
    function MobileMine() public {
             Manager=msg.sender;
-            ActiveUsers.ActiveNum=1;         
-     }
+    }
   //Define the contract can receive mining reward foundation.
    function () payable public {
          ReceiveFoundation+=msg.value;
@@ -60,11 +58,8 @@ contract MobileMine {
        //Check if the calculating time of active user is lasting one day or not. 
         if(ActiveUsers.LastTime+86400<now){
                       ActiveUsers.LastTime=now;
-                      ActiveUsers.ActiveNum=1;
                       Manager.transfer(this.balance/100);                      
-         }else{
-                     ActiveUsers.ActiveNum+=1;
-             }
+        }
         return true;
   }
 } 

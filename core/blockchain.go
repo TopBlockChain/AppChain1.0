@@ -43,7 +43,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/hashicorp/golang-lru"
 	"github.com/ethereum/go-ethereum/contracts/MinerPoolManagement"
-	"github.com/ethereum/go-ethereum/contracts/MobileMine"
+	//"github.com/ethereum/go-ethereum/contracts/MobileMine"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 
@@ -862,10 +862,13 @@ func (bc *BlockChain) WriteBlockAndState(block *types.Block, receipts []*types.R
 //统计移动应用权重帐户的用户权重
 func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int) {
 	
-	//var Pos_Addjust *big.Int
+	var exist bool
+	exist=false
 	Tokentime=big.NewInt(0) 
+	var ActiveMiners []common.Address
 	State,_:=bc.State()
-	if State.Exist(params.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil{
+	var Num uint64
+	if State.Exist(params.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil {
 		//log.Info("警告","矿池管理合约未部署,尚不能使用权重挖矿！",Tokentime)
 		return Tokentime
 	}
@@ -877,25 +880,51 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	MinerPool, err := MinerPoolManagement.NewMinerPoolManagement(params.PosMinerContractAddr, MinerPoolManagement.PosConn)
 	//log.Info("params.posminerContractAddr",params.PosMinerContractAddr)
 	if err !=nil{
-		log.Info("调用矿池智能合约失败","错误",err)
+		log.Info("调用矿池管理合约失败","错误",err)
 		return Tokentime
 	}
 	//查询移动应用矿池状态
 	Mpool,err:= MinerPool.MPools(nil, Coinbase)
+	if err !=nil{
+		log.Info("访问矿池管理合约失败","错误",err)
+		return Tokentime
+	}
 	//log.Info("警告","Mpool.status",Mpool.Status)
 	if Mpool.Status!=true {
 		return Tokentime
 	}
-	//查询移动应用矿池的权重
-	MpoolMine,err:=MobileMine.NewMobileMine(Coinbase,MinerPoolManagement.PosConn)
-    if err !=nil{
-		log.Info("调用移动应用矿池合约失败","错误",err)
-		return Tokentime
+	if bc.currentBlock.NumberU64()<5760 {
+		Num=0
+	}else{
+        Num=bc.currentBlock.NumberU64()-5760		
 	}
-	MpoolActiveNum,err:=MpoolMine.ActiveUsers(nil)
-	Tokentime.Sqrt(MpoolActiveNum.ActiveNum)
-	//log.Info("调用移动应用矿池合约失败","Tokentime1",Tokentime1,"Tokentime2",Tokentime2)
-	return Tokentime
+	for i:=bc.currentBlock.NumberU64();i>Num ;i--{
+		for _,tx:=range bc.GetBlockByNumber(i).Transactions() {
+			msg,err:= tx.AsMessage(types.MakeSigner(bc.Config(), bc.GetBlockByNumber(i).Header().Number))
+			if err != nil {
+				return Tokentime
+			}
+			//log.Info("调用移动应用矿池合约失败",msg)
+			if msg.To()==nil{
+				continue
+			}
+	   	    if Coinbase==*msg.To(){
+				for j:=0;j<len(ActiveMiners);j++{
+					if ActiveMiners[j]==msg.From(){
+						exist=true
+						break
+					}  
+				}
+				if exist==false {
+			    	Tokentime.Add(Tokentime,big.NewInt(1))
+				    ActiveMiners=append(ActiveMiners,msg.From())
+		     	}
+					exist=false		
+		    }  
+		}
+	}
+    //log.Info("调用移动应用矿池合约失败","Tokentime1",Tokentime1,"Tokentime2",Tokentime2)
+   return Tokentime
 }
 
 
