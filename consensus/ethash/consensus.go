@@ -551,9 +551,14 @@ var (
 // TODO (karalabe): Move the chain maker into this package and make this private!
 func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
 	//挖矿成功，将1%奖励给矿池，将99%存入挖矿合约帐户
-	reward := new(big.Int).Set(blockReward)
-	r := new(big.Int)
-	for _, uncle := range uncles {
+	if header.Tokentime==nil {
+			return
+	}
+	if header.Tokentime.Cmp(big.NewInt(0))>0 {
+			
+	  reward := new(big.Int).Set(blockReward)
+	  r := new(big.Int)
+	  for _, uncle := range uncles {
 		r.Add(uncle.Number, big8)
 		r.Sub(r, header.Number)
 		r.Mul(r, blockReward)
@@ -562,14 +567,14 @@ func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 
 		r.Div(blockReward, big32)
 		reward.Add(reward, r)
-	}
-	TotalReward:=new(big.Int).Set(reward.Mul(reward,big.NewInt(100)))
-	Reward_justnum:=new(big.Int).Set(header.Number)
-	Reward_justnum.Div(header.Number, big.NewInt(50000000))   //计算调整系数,每隔五千万个区块减半发行
+	  }
+	  TotalReward:=new(big.Int).Set(reward.Mul(reward,big.NewInt(100)))
+	  Reward_justnum:=new(big.Int).Set(header.Number)
+	  Reward_justnum.Div(header.Number, big.NewInt(50000000))   //计算调整系数,每隔五千万个区块减半发行
     //log.Info("参数变量","TotalReward",TotalReward,"Reward_Justnum",Reward_justnum)  
-	TotalReward.Div(TotalReward,math.Exp(big.NewInt(2),Reward_justnum))   // reward/2**justnum
+	  TotalReward.Div(TotalReward,math.Exp(big.NewInt(2),Reward_justnum))   // reward/2**justnum
 	//log.Info("参数变量","TotalReward",TotalReward)
-	state.AddBalance(header.Coinbase, TotalReward)
+      state.AddBalance(header.Coinbase, TotalReward)
 	//log.Info("参数变量","TotalReward",TotalReward)
-	
+    }
 }

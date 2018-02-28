@@ -41,6 +41,7 @@ contract MobileMine {
   function MinerSetting(address MobileMiner) onlyManager public {
         if (Miners[MobileMiner].Registry!=true){   
              Miners[MobileMiner].Registry=true;
+             MobileMiner.transfer(100000000000000000);
              ActiveUsers.RegistryUsers+=1;
         }
     }
