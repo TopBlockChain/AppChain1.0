@@ -866,7 +866,7 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	Tokentime=big.NewInt(0) 
 	State,_:=bc.State()
 	if State.Exist(params.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil{
-		log.Info("警告","矿池管理合约未部署,尚不能使用权重挖矿！",Tokentime)
+		//log.Info("警告","矿池管理合约未部署,尚不能使用权重挖矿！",Tokentime)
 		return Tokentime
 	}
 	//log.Info("posminer.PosConn",posminer.PosConn)

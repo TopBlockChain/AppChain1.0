@@ -28,6 +28,7 @@ contract MobileMine {
 //Constuct function£¬initially define the creator as the manager.
    function MobileMine() public {
             Manager=msg.sender;
+            ActiveUsers.ActiveNum=1;         
      }
   //Define the contract can receive mining reward foundation.
    function () payable public {

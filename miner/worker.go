@@ -422,6 +422,9 @@ func (self *worker) commitNewWork() {
 		header.Coinbase = self.coinbase
 		//log.Info("此处计算矿工币龄", "Tokentime", Tokentime)
 		header.Tokentime = self.chain.CalcTokenTime(header.Coinbase)
+		if header.Tokentime.Cmp(big.NewInt(0))==0 {
+            log.Info("移动应用矿池合约未部署，尚不能正常挖矿！")              
+		}
 	}
 	if err := self.engine.Prepare(self.chain, header); err != nil {
 		log.Error("准备区块头失败", "错误", err)
