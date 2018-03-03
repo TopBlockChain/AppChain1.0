@@ -23,11 +23,16 @@ contract MinerRegistry {
          require(RegMachine[msg.sender].status ==true);
          _;
       }
+   //Only Reggistry Miner  can modify. 
+     modifier onlyMiner {
+         require(MinerCertify[msg.sender]!=0);
+         _;
+      }
 
  //Construction function, initially define the creator as the manager.
     function MinerRegistry() public {
             Manager=msg.sender;
-     }
+    £ý
 //Define the contract can receive mining reward foundation.
    function () payable public {
          ReceiveFoundation+=msg.value; 
@@ -49,8 +54,8 @@ contract MinerRegistry {
     }
 
   //Miner registry.
-  function MinerReg(uint  certifyInformation)  public {
-         if (MinerCertify[msg.sender]==certifyInformation&&MinerCertify[msg.sender]!=0){   
+  function MinerReg(uint  certifyInformation) onlyMiner public {
+         if (MinerCertify[msg.sender]==certifyInformation){   
              MinerRegistryTime[msg.sender]=now;
              MinerCertify[msg.sender]=0;
          }
