@@ -42,7 +42,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/hashicorp/golang-lru"
-	"github.com/ethereum/go-ethereum/contracts/MinerPoolManagement"
+	"github.com/ethereum/go-ethereum/contracts/MinerRegistry"
 	//"github.com/ethereum/go-ethereum/contracts/MobileMine"
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -873,24 +873,14 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 		return Tokentime
 	}
 	//log.Info("posminer.PosConn",posminer.PosConn)
-	if MinerPoolManagement.PosConn==nil {
-		MinerPoolManagement.PosConn, _ = ethclient.Dial("//./pipe/geth.ipc")
+	if MinerRegistry.PosConn==nil {
+		MinerRegistry.PosConn, _ = ethclient.Dial("//./pipe/geth.ipc")
 		log.Info("AppChain连接", "连接IPC服务")
 	}
-	MinerPool, err := MinerPoolManagement.NewMinerPoolManagement(params.PosMinerContractAddr, MinerPoolManagement.PosConn)
+	MinerReg, err := MinerRegistry.NewMinerRegistry(params.PosMinerContractAddr, MinerRegistry.PosConn)
 	//log.Info("params.posminerContractAddr",params.PosMinerContractAddr)
 	if err !=nil{
 		log.Info("调用矿池管理合约失败","错误",err)
-		return Tokentime
-	}
-	//查询移动应用矿池状态
-	Mpool,err:= MinerPool.MPools(nil, Coinbase)
-	if err !=nil{
-		log.Info("访问矿池管理合约失败","错误",err)
-		return Tokentime
-	}
-	//log.Info("警告","Mpool.status",Mpool.Status)
-	if Mpool.Status!=true {
 		return Tokentime
 	}
 	if bc.currentBlock.NumberU64()<5760 {
@@ -908,7 +898,12 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 			if msg.To()==nil{
 				continue
 			}
-	   	    if Coinbase==*msg.To(){
+			MinerRegTime,err:= MinerReg.MinerRegistryTime(nil, msg.From())
+			if err !=nil{
+				log.Info("访问矿工注册合约失败","错误",err)
+				return Tokentime
+			}		
+	   	    if Coinbase==*msg.To()&&MinerRegTime.Add(MinerRegTime,big.NewInt(86400)).Cmp(bc.currentBlock.Time())>0{
 				for j:=0;j<len(ActiveMiners);j++{
 					if ActiveMiners[j]==msg.From(){
 						exist=true
