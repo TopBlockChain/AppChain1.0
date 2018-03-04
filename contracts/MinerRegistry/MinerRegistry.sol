@@ -32,7 +32,7 @@ contract MinerRegistry {
  //Construction function, initially define the creator as the manager.
     function MinerRegistry() public {
             Manager=msg.sender;
-    £ý
+    }
 //Define the contract can receive mining reward foundation.
    function () payable public {
          ReceiveFoundation+=msg.value; 
