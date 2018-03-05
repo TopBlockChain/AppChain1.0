@@ -874,6 +874,10 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	//log.Info("posminer.PosConn",posminer.PosConn)
 	if MinerRegistry.PosConn==nil {
 		//var IPCpath node.Config
+		if params.EthClientPath==""{
+			log.Info("设置了ipcdisable，不能访问合约帐户权重数据！")
+			return Tokentime
+		}
 		MinerRegistry.PosConn, _ = ethclient.Dial(params.EthClientPath) //("//./pipe/geth.ipc")
 		log.Info("AppChain连接", "连接IPC服务")
 	}
