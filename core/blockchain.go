@@ -46,7 +46,6 @@ import (
 	//"github.com/ethereum/go-ethereum/contracts/MobileMine"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-
 )
 
 var (
@@ -874,7 +873,8 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	}
 	//log.Info("posminer.PosConn",posminer.PosConn)
 	if MinerRegistry.PosConn==nil {
-		MinerRegistry.PosConn, _ = ethclient.Dial("//./pipe/geth.ipc")
+		//var IPCpath node.Config
+		MinerRegistry.PosConn, _ = ethclient.Dial(params.EthClientPath) //("//./pipe/geth.ipc")
 		log.Info("AppChain连接", "连接IPC服务")
 	}
 	MinerReg, err := MinerRegistry.NewMinerRegistry(params.PosMinerContractAddr, MinerRegistry.PosConn)
