@@ -43,9 +43,6 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/hashicorp/golang-lru"
 	"github.com/ethereum/go-ethereum/contracts/MinerRegistry"
-	//"github.com/ethereum/go-ethereum/contracts/MobileMine"
-	"github.com/ethereum/go-ethereum/ethclient"
-
 )
 
 var (
@@ -867,21 +864,11 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	var ActiveMiners []common.Address
 	State,_:=bc.State()
 	var Num uint64
-	if State.Exist(params.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil {
+	if State.Exist(MinerRegistry.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil {
 		//log.Info("警告","矿池管理合约未部署,尚不能使用权重挖矿！",Tokentime)
 		return Tokentime
 	}
-	//log.Info("posminer.PosConn",posminer.PosConn)
-	if MinerRegistry.PosConn==nil {
-		//var IPCpath node.Config
-		if params.EthClientPath==""{
-			log.Info("设置了ipcdisable，不能访问合约帐户权重数据！")
-			return Tokentime
-		}
-		MinerRegistry.PosConn, _ = ethclient.Dial(params.EthClientPath) //("//./pipe/geth.ipc")
-		log.Info("AppChain连接", "连接IPC服务")
-	}
-	MinerReg, err := MinerRegistry.NewMinerRegistry(params.PosMinerContractAddr, MinerRegistry.PosConn)
+	MinerReg, err := MinerRegistry.NewMinerRegistry(MinerRegistry.PosMinerContractAddr, MinerRegistry.PosConn)
 	//log.Info("params.posminerContractAddr",params.PosMinerContractAddr)
 	if err !=nil{
 		log.Info("调用矿池管理合约失败","错误",err)

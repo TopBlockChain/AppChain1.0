@@ -21,6 +21,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+//	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 var (
@@ -28,10 +29,9 @@ var (
 	TestnetGenesisHash = common.HexToHash("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d") // Testnet genesis hash to enforce below configs on
 )
 //POSMINER相关定义
-var (
-	PosMinerContractAddr = common.HexToAddress ("0x8C00B660792b235d4382368299E77C8c04ED4754")     //POSMINER合约地址
-    EthClientPath=string("")
-)
+//var (
+//	PosMinerContractAddr = common.HexToAddress ("0x8C00B660792b235d4382368299E77C8c04ED4754")     //POSMINER合约地址
+//)
     
 var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.

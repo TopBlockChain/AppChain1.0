@@ -34,9 +34,6 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/prometheus/prometheus/util/flock"
-	"github.com/ethereum/go-ethereum/params"
-
-	
 )
 
 // Node is a container on which services can be registered.
@@ -310,8 +307,6 @@ func (n *Node) startIPC(apis []rpc.API) error {
 	if n.ipcEndpoint == "" {
 		return nil
 	}
-	//定义EthClientPath，用于访问区块链 
-    params.EthClientPath=n.ipcEndpoint
 	// Register all the APIs exposed by the services
 	handler := rpc.NewServer()
 	for _, api := range apis {

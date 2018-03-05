@@ -16,6 +16,7 @@ import (
 //定义POSMINER访问客户端
 var(
 	PosConn *ethclient.Client
+	PosMinerContractAddr = common.HexToAddress ("0x8C00B660792b235d4382368299E77C8c04ED4754")     //POSMINER合约地址
 )	
 
 
