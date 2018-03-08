@@ -284,6 +284,8 @@ func (ethash *Ethash) verifyHeader(chain consensus.ChainReader, header, parent *
 	if err := misc.VerifyForkHashes(chain.Config(), header, uncle); err != nil {
 		return err
 	}
+
+
 	return nil
 }
 
@@ -563,6 +565,10 @@ func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		r.Sub(r, header.Number)
 		r.Mul(r, blockReward)
 		r.Div(r, big8)
+		//如果不是合约帐号，则不奖励。
+		//if state.GetCode(uncle.Coinbase)==nil{
+		//	continue
+		//}
 		state.AddBalance(uncle.Coinbase, r)
 
 		r.Div(blockReward, big32)

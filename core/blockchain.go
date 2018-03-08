@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"math/big"
 	mrand "math/rand"
 	"sync"
@@ -42,13 +43,14 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/hashicorp/golang-lru"
-	"github.com/ethereum/go-ethereum/contracts/MinerRegistry"
+	"github.com/ethereum/go-ethereum/contracts/MinerRefuel"
 )
 
 var (
 	blockInsertTimer = metrics.NewTimer("chain/inserts")
 
 	ErrNoGenesis = errors.New("Genesis not found in chain")
+
 )
 
 const (
@@ -855,62 +857,141 @@ func (bc *BlockChain) WriteBlockAndState(block *types.Block, receipts []*types.R
 	return status, nil
 }
 
-//统计移动应用权重帐户的用户权重
+//统计移动应用矿池的能量值
 func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int) {
 	
-	var exist bool
-	exist=false
-	Tokentime=big.NewInt(0) 
-	var ActiveMiners []common.Address
+	var exist bool   //开关变量，用于统计时检查是否已经统计，避免同一用户在同一矿池被重复统计
+	exist=false       //设初值为0
+	Tokentime=big.NewInt(0)    //权重初值设为0
+	//定义App活跃用户统计结构
+	type AppActiveUser struct {
+		 AppAddress common.Address    //App矿池合约地址
+		 ActiveUsers int64            //活跃用户数
+	} 
+	var(
+		AppUsers []AppActiveUser      //定义变量:活跃用户统计数组变量
+		TotalMiners []common.Address  //定义变量:总的用户数(同一用户仅统计一次)
+		ActiveMiners []common.Address  //临时变量:统计每个应用的用户数
+	)
 	State,_:=bc.State()
-	var Num uint64
-	if State.Exist(MinerRegistry.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil {
-		//log.Info("警告","矿池管理合约未部署,尚不能使用权重挖矿！",Tokentime)
+	var Start_Num uint64      //定义统计启始区块号
+	//检查能量加注合约是否已部署,矿池合约是否已部署,如任一没部署,0值返回
+	if State.Exist(MinerRefuel.PosMinerContractAddr)!=true || State.GetCode(Coinbase)==nil {
 		return Tokentime
 	}
-	MinerReg, err := MinerRegistry.NewMinerRegistry(MinerRegistry.PosMinerContractAddr, MinerRegistry.PosConn)
-	//log.Info("params.posminerContractAddr",params.PosMinerContractAddr)
+	//访问能量加注合约
+	MinerRef, err := MinerRefuel.NewMinerRefuel(MinerRefuel.PosMinerContractAddr, MinerRefuel.PosConn)
+	//如果调用错误,初值返回
 	if err !=nil{
-		log.Info("调用矿池管理合约失败","错误",err)
+		log.Info("调用能量加注合约失败","错误",err)
 		return Tokentime
 	}
+	//如果区块数大于一天的区块数，则统计启始点为当前区块号之前的5670所对应的区块号，否则从0块开始统计
 	if bc.currentBlock.NumberU64()<5760 {
-		Num=0
+		Start_Num=0
 	}else{
-        Num=bc.currentBlock.NumberU64()-5760		
+        Start_Num=bc.currentBlock.NumberU64()-5760		
 	}
-	for i:=bc.currentBlock.NumberU64();i>Num ;i--{
-		for _,tx:=range bc.GetBlockByNumber(i).Transactions() {
-			msg,err:= tx.AsMessage(types.MakeSigner(bc.Config(), bc.GetBlockByNumber(i).Header().Number))
-			if err != nil {
-				return Tokentime
-			}
-			//log.Info("调用移动应用矿池合约失败",msg)
-			if msg.To()==nil{
+	//统计App的数量:遍历一天的区块数据,统计App的数量,并在数组变量中定义App所对应的合约地址；同时统计一天的活跃用户总数（此值晢未使用）
+	for i:=bc.currentBlock.NumberU64();i>Start_Num ;i--{       //统计一天的区块
+		for _,tx:=range bc.GetBlockByNumber(i).Transactions() {   //统计每个区块的交易
+			msg,err:= tx.AsMessage(types.MakeSigner(bc.Config(), bc.GetBlockByNumber(i).Header().Number))   //获取交易的消息内容
+			if err != nil||msg.To()==nil{      //如果访问错误码或是合约创建消息，进入下一次循环
 				continue
 			}
-			MinerRegTime,err:= MinerReg.MinerRegistryTime(nil, msg.From())
+			//访问智能合约，获取当前矿号所对应的能量充值时间。
+			MinerRefTime,err:= MinerRef.MinerRefuelTime(nil, msg.From())
+			//如访问错误，进入下一次循环
 			if err !=nil{
-				log.Info("访问矿工注册合约失败","错误",err)
-				return Tokentime
-			}		
-	   	    if Coinbase==*msg.To()&&MinerRegTime.Add(MinerRegTime,big.NewInt(86400)).Cmp(bc.currentBlock.Time())>0{
-				for j:=0;j<len(ActiveMiners);j++{
-					if ActiveMiners[j]==msg.From(){
+				log.Info("访问能量加注合约失败","错误",err)
+				continue
+			}
+			//统计移动矿工的总数量，要求移动矿工的能量加注时间不能超过所统计区块时间的一小时。
+			if MinerRefTime.Add(MinerRefTime,big.NewInt(3600)).Cmp(bc.GetBlockByNumber(i).Time())>0&&State.GetCode(*msg.To())!=nil&&*msg.To()!=MinerRefuel.PosMinerContractAddr{
+				for n:=0;n<len(TotalMiners);n++{      //查询该移动矿工是否已被加入统计数组。
+					if TotalMiners[n]==msg.From(){
+						exist=true
+						break
+					}
+				}
+				if exist==false {
+			    	TotalMiners=append(TotalMiners,msg.From())
+		     	} 
+				exist=false					
+				//统计移动应用的数量，如果是挖矿智能合约则计入。
+	       	    for m:=0;m<len(AppUsers);m++{       //统计该合约地址是否已加入合约地址
+				    if AppUsers[m].AppAddress==*msg.To(){
 						exist=true
 						break
 					}  
-				}
+			    }
 				if exist==false {
-			    	Tokentime.Add(Tokentime,big.NewInt(1))
-				    ActiveMiners=append(ActiveMiners,msg.From())
-		     	}
-					exist=false		
-		    }  
+			       AppUsers=append(AppUsers,AppActiveUser{*msg.To(),0})
+		     	} 
+				exist=false     
+			} 
 		}
 	}
-    //log.Info("调用移动应用矿池合约失败","Tokentime1",Tokentime1,"Tokentime2",Tokentime2)
-   return Tokentime
+	//如果App数量为0，则退出统计
+	if len(AppUsers)==0{
+		return Tokentime	
+	}
+    //统计每个App对应的用户数
+    for x:=0;x<len(AppUsers);x++{
+		//初始设置当前下标所对应的App活跃用户数为空
+		ActiveMiners=[]common.Address{}
+		//遍历天天的区块,统计当前下标所对应App的活跃用户数。
+		for i:=bc.currentBlock.NumberU64();i>Start_Num ;i--{
+	         for _,tx:=range bc.GetBlockByNumber(i).Transactions() {
+		        msg,err:= tx.AsMessage(types.MakeSigner(bc.Config(), bc.GetBlockByNumber(i).Header().Number))
+		        if err != nil||msg.To()==nil{
+			        continue
+	            }
+		        //访问智能合约，获取当前矿号所对应的能量充值时间。
+		        MinerRefTime,err:= MinerRef.MinerRefuelTime(nil, msg.From())
+		        if err !=nil{
+			        log.Info("访问矿工注册合约失败","错误",err)
+			        return Tokentime
+		        }
+				//统计当前移动应用的活跃矿工数，要求挖矿对象为本矿池，移动矿工的注册时间不能超过所统计区块时间的一小时。
+		       if *msg.To()==AppUsers[x].AppAddress&&MinerRefTime.Add(MinerRefTime,big.NewInt(3600)).Cmp(bc.GetBlockByNumber(i).Time())>0{
+		 	       for j:=0;j<len(ActiveMiners);j++{
+				        if ActiveMiners[j]==msg.From(){
+					      exist=true
+					      break
+				        }  
+			        } 
+			       if exist==false {
+				      ActiveMiners=append(ActiveMiners,msg.From())
+			        }
+				   exist=false				
+		        }  
+	        }
+		}
+		//对当前下标所对应的App数组的活跃用户数赋值
+		AppUsers[x].ActiveUsers=int64(len(ActiveMiners))
+	}	       
+	//统计总用户权重并查询和定义当前矿池的用户权重
+	var TotalUsers,Coinbase_users int64
+	for y:=0;y<len(AppUsers);y++{
+		//log.Info("计算结果","App",AppUsers[y].AppAddress,"ActiveMiners",AppUsers[y].ActiveUsers)
+		TotalUsers=TotalUsers+AppUsers[y].ActiveUsers
+		if AppUsers[y].AppAddress==Coinbase {
+			Coinbase_users=AppUsers[y].ActiveUsers    //当前矿池的用户权重
+		}
+	}
+	//当前矿池的活动矿工数是否大于矿池的平均矿工数，如果大于使用平方根衰减增长函数。
+	if Coinbase_users>TotalUsers/int64(len(AppUsers)){
+		 averageuser:=float64(TotalUsers)/float64(len(AppUsers))
+         tem_Tokentime:=int64(averageuser*math.Sqrt(float64(Coinbase_users)/averageuser))
+		 //Tokentime= avarageminer*sqrt((Tokentime/avarageminer)) 权重等于矿池平均活跃用户数乘以当前矿池的活跃用户相对平均数倍数的方根。
+		 Tokentime=big.NewInt(tem_Tokentime)
+		 //log.Info("计算结果","averageuser",averageuser,"tem_Tokentime",tem_Tokentime,"sqrt",float64(Coinbase_users)/averageuser)
+    }else{
+		Tokentime=big.NewInt(Coinbase_users)
+	}
+	//log.Info("计算结果","Coinbase_Users",Coinbase_users)
+	return Tokentime
 }
 
 
@@ -966,19 +1047,15 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		headers[i] = block.Header()
 		seals[i] = true
 	}
-	abort, results := bc.engine.VerifyHeaders(bc, headers, seals)
-    //此处检查区块时间时帐号币龄
-   if new(big.Int).Sub(big.NewInt(time.Now().Unix()), bc.currentBlock.Time()).Cmp(big.NewInt(100)) < 0 {
-	   Tokentime := bc.CalcTokenTime(bc.currentBlock.Coinbase())
-	      if Tokentime.Cmp(bc.currentBlock.Header().Tokentime) < 0 {
-		   //log.Info("应链权重验证失败","区块号", bc.currentBlock.NumberU64,"应链权重",Tokentime,"区块封装难度",bc.currentBlock.Difficulty)
-		   abort := make(chan struct{})
-		   defer close(abort)
-
-	   }
-		//log.Info("矿工状态","矿工", bc.currentBlock.Coinbase(), "矿工权重",Tokentime,"区块难度",bc.currentBlock.Header().Difficulty)  //查看当前矿工状态
-	   
-    }
+  	abort, results := bc.engine.VerifyHeaders(bc, headers, seals)
+   	// Verify Tokentime 验证Tokentime的值，需要查询区块链
+	if new(big.Int).Sub(big.NewInt(time.Now().Unix()), bc.currentBlock.Time()).Cmp(big.NewInt(100)) < 0 {
+		Tokentime := bc.CalcTokenTime(bc.currentBlock.Coinbase())
+		   if Tokentime.Cmp(bc.currentBlock.Header().Tokentime) < 0 {
+			   return 1, events, coalescedLogs, fmt.Errorf("invalid Tokentime: have %v, need %v", bc.currentBlock.Header().Tokentime, Tokentime)
+		}
+		 //log.Info("矿工状态","矿工", bc.currentBlock.Coinbase(), "矿工权重",Tokentime,"区块难度",bc.currentBlock.Header().Difficulty)  //查看当前矿工状态
+	 }
 	defer close(abort)
 
 	// Iterate over the blocks and insert when the verifier permits
