@@ -566,11 +566,10 @@ func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		r.Mul(r, blockReward)
 		r.Div(r, big8)
 		//如果不是合约帐号，则不奖励。
-		//if state.GetCode(uncle.Coinbase)==nil{
-		//	continue
-		//}
+		if state.GetCode(uncle.Coinbase)==nil{
+			continue
+		}
 		state.AddBalance(uncle.Coinbase, r)
-
 		r.Div(blockReward, big32)
 		reward.Add(reward, r)
 	  }
