@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"bytes"
 	"math/big"
 	mrand "math/rand"
 	"sync"
@@ -863,6 +864,7 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	var exist bool   //开关变量，用于统计时检查是否已经统计，避免同一用户在同一矿池被重复统计
 	exist=false       //设初值为0
 	Tokentime=big.NewInt(0)    //权重初值设为0
+	var MineMark=[]byte{66,200,112,91}   //定义挖矿交易标识符
 	//定义App活跃用户统计结构
 	type AppActiveUser struct {
 		 AppAddress common.Address    //App矿池合约地址
@@ -907,7 +909,7 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 				continue
 			}
 			//统计移动矿工的总数量，要求移动矿工的能量加注时间不能超过所统计区块时间的一小时。
-			if MinerRefTime.Add(MinerRefTime,big.NewInt(3600)).Cmp(bc.GetBlockByNumber(i).Time())>0&&State.GetCode(*msg.To())!=nil&&*msg.To()!=MinerRefuel.PosMinerContractAddr{
+			if MinerRefTime.Add(MinerRefTime,big.NewInt(3600)).Cmp(bc.GetBlockByNumber(i).Time())>0&&bytes.Equal(msg.Data(),MineMark){
 				for n:=0;n<len(TotalMiners);n++{      //查询该移动矿工是否已被加入统计数组。
 					if TotalMiners[n]==msg.From(){
 						exist=true
@@ -926,7 +928,8 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 					}  
 			    }
 				if exist==false {
-			       AppUsers=append(AppUsers,AppActiveUser{*msg.To(),0})
+				   AppUsers=append(AppUsers,AppActiveUser{*msg.To(),0})
+				   //log.Info("合约调用数据","*msg.to",*msg.To(),"msg.Data",msg.Data(),"MineMark",MineMark,"compare",bytes.Equal(msg.Data(),MineMark))
 		     	} 
 				exist=false     
 			} 

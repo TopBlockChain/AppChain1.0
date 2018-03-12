@@ -552,7 +552,6 @@ var (
 // included uncles. The coinbase of each uncle block is also rewarded.
 // TODO (karalabe): Move the chain maker into this package and make this private!
 func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	//挖矿成功，将1%奖励给矿池，将99%存入挖矿合约帐户
 	if header.Tokentime==nil {
 			return
 	}
@@ -576,10 +575,7 @@ func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	  TotalReward:=new(big.Int).Set(reward.Mul(reward,big.NewInt(100)))
 	  Reward_justnum:=new(big.Int).Set(header.Number)
 	  Reward_justnum.Div(header.Number, big.NewInt(50000000))   //计算调整系数,每隔五千万个区块减半发行
-    //log.Info("参数变量","TotalReward",TotalReward,"Reward_Justnum",Reward_justnum)  
 	  TotalReward.Div(TotalReward,math.Exp(big.NewInt(2),Reward_justnum))   // reward/2**justnum
-	//log.Info("参数变量","TotalReward",TotalReward)
       state.AddBalance(header.Coinbase, TotalReward)
-	//log.Info("参数变量","TotalReward",TotalReward)
     }
 }
