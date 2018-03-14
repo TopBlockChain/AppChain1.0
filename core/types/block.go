@@ -81,7 +81,7 @@ type Header struct {
 	GasUsed     *big.Int       `json:"gasUsed"          gencodec:"required"`
 	Time        *big.Int       `json:"timestamp"        gencodec:"required"`
 	Extra       []byte         `json:"extraData"        gencodec:"required"`
-	Tokentime   *big.Int       `json:"Tokentime"        gencodec:"required"`
+	Tokentime   *big.Int       `json:"tokentime"        gencodec:"required"`
 	MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
 	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 }
@@ -322,6 +322,7 @@ func (b *Block) TxHash() common.Hash      { return b.header.TxHash }
 func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) UncleHash() common.Hash   { return b.header.UncleHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
+func (b *Block) Tokentime() *big.Int { return new(big.Int).Set(b.header.Tokentime) }
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
 
@@ -421,7 +422,9 @@ func (h *Header) String() string {
 	Extra:		    %s
 	MixDigest:      %x
 	Nonce:		    %x
-]`, h.Hash(), h.ParentHash, h.UncleHash, h.Coinbase, h.Root, h.TxHash, h.ReceiptHash, h.Bloom, h.Difficulty, h.Number, h.GasLimit, h.GasUsed, h.Time, h.Extra, h.MixDigest, h.Nonce)
+	Tokentime:	    %v
+	
+]`, h.Hash(), h.ParentHash, h.UncleHash, h.Coinbase, h.Root, h.TxHash, h.ReceiptHash, h.Bloom, h.Difficulty, h.Number, h.GasLimit, h.GasUsed, h.Time, h.Extra, h.MixDigest, h.Nonce,h.Tokentime)
 }
 
 type Blocks []*Block
