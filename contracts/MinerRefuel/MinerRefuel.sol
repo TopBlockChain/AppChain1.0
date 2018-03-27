@@ -4,8 +4,10 @@ contract MinerRefuel {
   //定义合约管理员
     address public Manager;
     //Only manager can modify. 
+   //定义转帐事件 
+   event Transfer(address indexed from, address indexed to, uint256 value);
    //定义修饰函数：仅合约管理员能修改
-     modifier onlyManager {
+        modifier onlyManager {
          require(msg.sender ==Manager);
          _;
       }
@@ -46,6 +48,7 @@ contract MinerRefuel {
         MinerRefuelTime[Miner]=now;      //设置矿工能量时间为当前时间
         if (Miner.balance<10000000000000000){      //如果该移动矿工的帐户余额小于0.01APC
              Miner.transfer(10000000000000000);       //向移动矿工帐户转款0.01APC
+             Transfer(this, Miner, 10000000000000000); //转帐事件报告。
         }
     }
 }

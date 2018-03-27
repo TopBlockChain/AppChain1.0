@@ -36,7 +36,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/contracts/MinerRefuel"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -248,7 +247,6 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			utils.Fatalf("Failed to attach to self: %v", err)
 		}
 		stateReader := ethclient.NewClient(rpcClient)
-        MinerRefuel.PosConn=stateReader
 		// Open any wallets already attached
 		for _, wallet := range stack.AccountManager().Wallets() {
 			if err := wallet.Open(""); err != nil {

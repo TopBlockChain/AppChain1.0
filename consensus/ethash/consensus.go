@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/log"	
 	 set "gopkg.in/fatih/set.v0"
 )
 
@@ -297,6 +298,7 @@ func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Heade
 	next := new(big.Int).Add(parent.Number, big1)
 	switch {
 	case config.IsByzantium(next):
+		log.Info("This is Byzantium")
 		return calcDifficultyByzantium(time, parent)
 	//case config.IsHomestead(next):
 	//	return calcDifficultyHomestead(time, parent)

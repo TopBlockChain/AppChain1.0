@@ -170,6 +170,8 @@ func initGenesis(ctx *cli.Context) error {
 			utils.Fatalf("Failed to write genesis block: %v", err)
 		}
 		log.Info("创始块状态创建成功", "database", name, "hash", hash)
+		log.Info("创始块状态创建成功", "hash", hash.Hex())
+
 	}
 	return nil
 }
