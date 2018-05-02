@@ -894,6 +894,10 @@ func (bc *BlockChain) CalcTokenTime(Coinbase common.Address) (Tokentime *big.Int
 	for i:=Start_Num+1;i<=bc.currentBlock.NumberU64();i++{       //统计一天的区块
 		for _,tx:=range bc.GetBlockByNumber(i).Transactions() {   //统计每个区块的交易
 			msg,err:= tx.AsMessage(types.MakeSigner(bc.Config(), bc.GetBlockByNumber(i).Header().Number))   //获取交易的消息内容
+			xm:=[]byte{}
+			if bytes.Equal(msg.Data(),xm){
+				continue
+			}
 			if err != nil||msg.To()==nil||*msg.To()!=params.PosMinerContractAddr||!bytes.Equal(msg.Data()[0:4],RefuelMark){      //如果访问错误码或是合约创建消息或不是能量加注合约调用，进入下一次循环
 				continue
 			}

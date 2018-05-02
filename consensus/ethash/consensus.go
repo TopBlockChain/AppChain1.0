@@ -244,10 +244,12 @@ func (ethash *Ethash) verifyHeader(chain consensus.ChainReader, header, parent *
 		return errZeroBlockTime
 	}
 	// Verify the block's difficulty based in it's timestamp and parent's difficulty
-	expected := CalcDifficulty(chain.Config(), header.Time.Uint64(), parent)
-	if expected.Cmp(header.Difficulty) != 0 {
-		return fmt.Errorf("invalid difficulty: have %v, want %v", header.Difficulty, expected)
-	}
+	if !chain.Config().IsByzantium(header.Number){
+	    expected := CalcDifficulty(chain.Config(), header.Time.Uint64(), parent)
+	    if expected.Cmp(header.Difficulty) != 0 {
+		     return fmt.Errorf("invalid difficulty: have %v, want %v", header.Difficulty, expected)
+	    }
+    }
 	// Verify that the gas limit is <= 2^63-1
 	if header.GasLimit.Cmp(math.MaxBig63) > 0 {
 		return fmt.Errorf("invalid gasLimit: have %v, max %v", header.GasLimit, math.MaxBig63)
@@ -576,7 +578,7 @@ func AccumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	  }
 	  TotalReward:=new(big.Int).Set(reward.Mul(reward,big.NewInt(100)))
 	  Reward_justnum:=new(big.Int).Set(header.Number)
-	  Reward_justnum.Div(header.Number, big.NewInt(50000000))   //计算调整系数,每隔五千万个区块减半发行
+	  Reward_justnum.Div(header.Number, big.NewInt(43750000))   //计算调整系数,每隔4375万个区块减半发行,从而使总量控制在1000亿个IMC。
 	  TotalReward.Div(TotalReward,math.Exp(big.NewInt(2),Reward_justnum))   // reward/2**justnum
       state.AddBalance(header.Coinbase, TotalReward)
     }

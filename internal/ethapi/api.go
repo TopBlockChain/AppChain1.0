@@ -637,6 +637,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	// and apply the message.
 	gp := new(core.GasPool).AddGas(math.MaxBig256)
 	res, gas, failed, err := core.ApplyMessage(evm, msg, gp)
+//	log.Info("doCall","headernumber",header.Number.String())
 	if err := vmError(); err != nil {
 		return nil, common.Big0, false, err
 	}

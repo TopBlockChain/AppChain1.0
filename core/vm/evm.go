@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+
 )
 
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
@@ -165,7 +166,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	}
 	evm.Transfer(evm.StateDB, caller.Address(), to.Address(), value)
 
-	// initialise a new contract and set the code that is to be used by the
+    // initialise a new contract and set the code that is to be used by the
 	// E The contract is a scoped environment for this execution context
 	// only.
 	contract := NewContract(caller, to, value, gas)

@@ -109,6 +109,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
 	}
 	chainDb, err := CreateDB(ctx, config, "chaindata")
+	ethdb.PresentDB =chainDb
 	if err != nil {
 		return nil, err
 	}

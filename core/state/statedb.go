@@ -522,7 +522,7 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 		} else {
 			stateObject.updateRoot(s.db)
 			s.updateStateObject(stateObject)
-		}
+			}
 	}
 	// Invalidate journal because reverting across transactions is not allowed.
 	s.clearJournalAndRefund()
@@ -533,6 +533,7 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 // goes into transaction receipts.
 func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
 	s.Finalise(deleteEmptyObjects)
+	//log.Info("状态查询","OXF933balance",s.GetBalance(common.HexToAddress("0xf933b0CF38a270938B9D6bb41f004374363C3EC0")))
 	return s.trie.Hash()
 }
 
