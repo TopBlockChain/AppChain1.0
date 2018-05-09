@@ -83,22 +83,4 @@ func CanTransfer(db vm.StateDB, addr common.Address, amount *big.Int) bool {
 func Transfer(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
 	db.SubBalance(sender, amount)
 	db.AddBalance(recipient, amount)
-	// if db.GetCode(sender)!=nil&&blockNr!=nil{
-	//     d2 :="!"+blockNr.String()+";"+sender.String()+";"+recipient.String()+";"+amount.String()+"\n"
-	// 	h :=  sha3.New256()
-	// 	h.Write([]byte(d2))
-	// 	bs := h.Sum(nil)
-	//     if BS,_:=ethdb.PresentDB.Get(bs);BS==nil{
-	// 	  ethdb.PresentDB.Put(bs,bs)
-	// 	  f, err := os.OpenFile("Balance.txt", os.O_APPEND, 0775)
-	// 	  if err != nil {
-	// 		 panic(err)
-	// 	  }
-	//       _,erro:=f.WriteString(d2)
-	//       if erro != nil {
-	// 	     panic(err)
-	//       }
-	// 	  f.Sync()
-	//     }
-	// }
 }

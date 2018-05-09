@@ -20,15 +20,15 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
+	//"os"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/ethereum/go-ethereum/ethdb"
+	//"github.com/ethereum/go-ethereum/crypto/sha3"
+	//"github.com/ethereum/go-ethereum/ethdb"
 
 )
 
@@ -606,25 +606,25 @@ func opCreate(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *S
 	return nil, nil
 }
 //此函数用于记录合约转帐值。
-func TransferLog(blockNr *big.Int,from common.Address,to common.Address, amount *big.Int) {
-    d2 :="!"+blockNr.String()+";"+from.String()+";"+to.String()+";"+amount.String()+"\n"
-	h :=  sha3.New256()
-	h.Write([]byte(d2))
- 	bs := h.Sum(nil)
-    if BS,_:=ethdb.PresentDB.Get(bs);BS==nil{
-       ethdb.PresentDB.Put(bs,bs)
-       f, err := os.OpenFile("Balance.txt", os.O_APPEND, 0775)
-       if err != nil {
- 		 panic(err)
-	  }
-      _,erro:=f.WriteString(d2)
-       if erro != nil {
- 	     panic(err)
-       }
- 	   f.Sync()
-     }
+// func TransferLog(blockNr *big.Int,from common.Address,to common.Address, amount *big.Int) {
+//     d2 :="!"+blockNr.String()+";"+from.String()+";"+to.String()+";"+amount.String()+"\n"
+// 	h :=  sha3.New256()
+// 	h.Write([]byte(d2))
+//  	bs := h.Sum(nil)
+//     if BS,_:=ethdb.PresentDB.Get(bs);BS==nil{
+//        ethdb.PresentDB.Put(bs,bs)
+//        f, err := os.OpenFile("Balance.txt", os.O_APPEND, 0775)
+//        if err != nil {
+//  		 panic(err)
+// 	  }
+//       _,erro:=f.WriteString(d2)
+//        if erro != nil {
+//  	     panic(err)
+//        }
+//  	   f.Sync()
+//      }
 
-}
+// }
 
 
 func opCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
@@ -643,7 +643,7 @@ func opCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Sta
 	}
 
 	ret, returnGas, err := evm.Call(contract, toAddr, args, gas, value)
-    TransferLog(evm.Context.BlockNumber,contract.Address(),toAddr,value)
+    //TransferLog(evm.Context.BlockNumber,contract.Address(),toAddr,value)
 
 	if err != nil {
 		stack.push(new(big.Int))

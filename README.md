@@ -1,6 +1,6 @@
 ## Go Ethereum
 
-应链GO-thereum项目
+IMCGO-thereum项目
 
 
 ## 源码创建

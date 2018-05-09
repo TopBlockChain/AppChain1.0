@@ -609,7 +609,7 @@ func (bc *BlockChain) Stop() {
 	atomic.StoreInt32(&bc.procInterrupt, 1)
 
 	bc.wg.Wait()
-	log.Info("应链管理器停止工作")
+	log.Info("IMC管理器停止工作")
 }
 
 func (bc *BlockChain) procFutureBlocks() {
@@ -1204,7 +1204,7 @@ func (st *insertStats) report(chain []*types.Block, index int) {
 		if st.ignored > 0 {
 			context = append(context, []interface{}{"忽略", st.ignored}...)
 		}
-		log.Info("导入应链新区块", context...)
+		log.Info("导入IMC新区块", context...)
 
 		*st = insertStats{startTime: now, lastIndex: index + 1}
 	}
@@ -1394,7 +1394,7 @@ func (bc *BlockChain) reportBlock(block *types.Block, receipts types.Receipts, e
 		receiptString += fmt.Sprintf("\t%v\n", receipt)
 	}
 	log.Error(fmt.Sprintf(`
-########## 不符合应链规则的区块 #########
+########## 不符合IMC规则的区块 #########
 区块链配置: %v
 
 区块编号: %v

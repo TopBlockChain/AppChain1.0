@@ -163,7 +163,7 @@ func (n *Node) Start() error {
 		n.serverConfig.NodeDatabase = n.config.NodeDB()
 	}
 	running := &p2p.Server{Config: n.serverConfig}
-	n.log.Info("启动应链P2P节点", "instance", n.serverConfig.Name)
+	n.log.Info("启动IMCP2P节点", "instance", n.serverConfig.Name)
 
 	// Otherwise copy and specialize the P2P configuration
 	services := make(map[reflect.Type]Service)

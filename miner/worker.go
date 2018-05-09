@@ -311,7 +311,7 @@ func (self *worker) wait() {
 			}
 			stat, err := self.chain.WriteBlockAndState(block, work.receipts, work.state)
 			if err != nil {
-				log.Error("区块写入应链失败", "错误", err)
+				log.Error("区块写入IMC失败", "错误", err)
 				continue
 			}
 			// check if canon block and write transactions

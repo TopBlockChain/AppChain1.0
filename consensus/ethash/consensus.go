@@ -518,7 +518,7 @@ func (ethash *Ethash) VerifySeal(chain consensus.ChainReader, header *types.Head
 	if new(big.Int).SetBytes(result).Cmp(target) > 0 {
 		return errInvalidPoW
 	}
-    //log.Info("应链验证","区块号",header.Number, "应链权重",header.Tokentime,"封装难度",header.Difficulty)
+    //log.Info("IMC验证","区块号",header.Number, "IMC权重",header.Tokentime,"封装难度",header.Difficulty)
 	return nil
 }
 

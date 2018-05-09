@@ -109,7 +109,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
 	}
 	chainDb, err := CreateDB(ctx, config, "chaindata")
-	ethdb.PresentDB =chainDb
+	//ethdb.PresentDB =chainDb
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	if _, ok := genesisErr.(*params.ConfigCompatError); genesisErr != nil && !ok {
 		return nil, genesisErr
 	}
-	log.Info("初始化应链配置", "配置", chainConfig)
+	log.Info("初始化IMC配置", "配置", chainConfig)
 
 	eth := &Ethereum{
 		config:         config,
@@ -136,7 +136,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		bloomIndexer:   NewBloomIndexer(chainDb, params.BloomBitsBlocks),
 	}
 
-	log.Info("初始化应链协议", "版本号", ProtocolVersions, "网络", config.NetworkId)
+	log.Info("初始化IMC协议", "版本号", ProtocolVersions, "网络", config.NetworkId)
 
 	if !config.SkipBcVersionCheck {
 		bcVersion := core.GetBlockChainVersion(chainDb)
